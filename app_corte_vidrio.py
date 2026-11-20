@@ -11,7 +11,7 @@ import streamlit as st
 # ==========================================
 # 0. CONFIGURACIÓN DE EMPRESA Y RUTAS
 # ==========================================
-NOMBRE_EMPRESA = "ALUMTECNIC ESTRUCTURAS EN ALUMINIO VIDRIO Y ACERO S.A.S."
+NOMBRE_EMPRESA = "ALUMTECNIC ESTRUCTURAS EN ALUMINIO VIDRIO Y ACERO S.A."
 SUBTITULO_EMPRESA = "Corte y Producción — Control de Calidad"
 RUTA_LOGO = "logo.png"
 CARPETA_SALIDA_LOCAL = r"G:\Mi unidad\PYTHON PROJECTS\CUTTER\Generados"
@@ -144,7 +144,7 @@ def generar_pdf_bytes(
       )
       fig.patches.append(marco_hoja)
 
-      ax_logo = fig.add_axes([0.04, 0.85, 0.14, 0.10])
+      ax_logo = fig.add_axes([0.04, 0.85, 0.13, 0.10])
       ax_logo.axis("off")
       if logo_img is not None:
         ax_logo.imshow(logo_img)
@@ -166,7 +166,7 @@ def generar_pdf_bytes(
             ),
         )
 
-      ax_empresa = fig.add_axes([0.19, 0.85, 0.48, 0.10])
+      ax_empresa = fig.add_axes([0.18, 0.85, 0.50, 0.10])
       ax_empresa.axis("off")
       ax_empresa.text(
           0.5,
@@ -174,7 +174,7 @@ def generar_pdf_bytes(
           NOMBRE_EMPRESA,
           ha="center",
           va="center",
-          fontsize=12.5,
+          fontsize=10.0,
           fontweight="bold",
           color="#023047",
       )
@@ -184,7 +184,7 @@ def generar_pdf_bytes(
           SUBTITULO_EMPRESA,
           ha="center",
           va="center",
-          fontsize=8.8,
+          fontsize=8.6,
           color="#495057",
       )
       ax_empresa.text(
@@ -194,12 +194,12 @@ def generar_pdf_bytes(
           f" {len(planchas_usadas)}",
           ha="center",
           va="center",
-          fontsize=9.5,
+          fontsize=9.3,
           fontweight="bold",
           color="#0077b6",
       )
 
-      ax_control = fig.add_axes([0.68, 0.85, 0.28, 0.10])
+      ax_control = fig.add_axes([0.70, 0.85, 0.26, 0.10])
       ax_control.axis("off")
       texto_control = (
           f"REGISTRO N.° : {numeracion}\n"
@@ -213,7 +213,7 @@ def generar_pdf_bytes(
           texto_control,
           ha="left",
           va="center",
-          fontsize=8.0,
+          fontsize=7.8,
           family="monospace",
           bbox=dict(
               boxstyle="round,pad=0.5",
@@ -420,11 +420,11 @@ with st.form("form_corte"):
   col1, col2 = st.columns(2)
   with col1:
     nombre_orden = st.text_input(
-        "Nombre / N.° de Orden", placeholder="Ej. OT-045"
+        "Nombre / N.° de Orden *", placeholder="Ej. OT-045"
     )
   with col2:
     responsable = st.text_input(
-        "Responsable", placeholder="Ej. Carlos Pérez"
+        "Responsable *", placeholder="Ej. Carlos Pérez"
     )
 
   col3, col4, col5 = st.columns(3)
@@ -456,9 +456,14 @@ with st.form("form_corte"):
       label_visibility="collapsed",
   )
 
-  enviar = st.form_submit_button("Generar Plano A4 PDF", use_container_width=True)
+  enviar = st.form_submit_button(
+      "Generar Plano A4 PDF", use_container_width=True
+  )
 
 if enviar:
+  orden_final = nombre_orden.strip()
+  resp_final = responsable.strip()
+
   piezas = []
   errores_linea = []
 
@@ -481,46 +486,47 @@ if enviar:
     except ValueError:
       errores_linea.append(f"Línea {idx}: '{linea_limpia}'")
 
-  if errores_linea:
-    st.error(
-        "Revisa el formato de estas líneas:\n" + "\n".join(errores_linea)
-    )
+  if not orden_final and not resp_final:
+    st.error("Debes ingresar el **Nombre / N.° de Orden** y el **Responsable**.")
+  elif not orden_final:
+    st.error("Debes ingresar el **Nombre / N.° de Orden**.")
+  elif not resp_final:
+    st.error("Debes ingresar el **Responsable**.")
+  elif errores_linea:
+    st.error("Revisa el formato de estas líneas:\n" + "\n".join(errores_linea))
   elif not piezas:
     st.warning("Ingresa al menos un corte antes de generar el PDF.")
   else:
-    orden_final = nombre_orden.strip() or "SIN_ORDEN"
-    resp_final = responsable.strip() or "No especificado"
+    with st.spinner("Generando plano A4 PDF, por favor espera..."):
+      pdf_bytes_temp, _, _, _ = generar_pdf_bytes(
+          numeracion="001",
+          nombre_orden=orden_final,
+          responsable=resp_final,
+          plancha_ancho=plancha_ancho,
+          plancha_alto=plancha_alto,
+          espesor=espesor,
+          margen=margen,
+          permitir_rotacion=permitir_rotacion,
+          piezas_pedidas=piezas,
+      )
 
-    # Primero generamos el PDF con correlativo base; si existe carpeta local, se calcula allí
-    pdf_bytes_temp, _, _, _ = generar_pdf_bytes(
-        numeracion="001",
-        nombre_orden=orden_final,
-        responsable=resp_final,
-        plancha_ancho=plancha_ancho,
-        plancha_alto=plancha_alto,
-        espesor=espesor,
-        margen=margen,
-        permitir_rotacion=permitir_rotacion,
-        piezas_pedidas=piezas,
-    )
+      ruta_local, numeracion_real = (
+          guardar_en_carpeta_local_si_existe(orden_final, pdf_bytes_temp)
+          if pdf_bytes_temp
+          else (None, "001")
+      )
 
-    ruta_local, numeracion_real = (
-        guardar_en_carpeta_local_si_existe(orden_final, pdf_bytes_temp)
-        if pdf_bytes_temp
-        else (None, "001")
-    )
-
-    pdf_bytes, acomodadas, pedidas, error_msg = generar_pdf_bytes(
-        numeracion=numeracion_real or "001",
-        nombre_orden=orden_final,
-        responsable=resp_final,
-        plancha_ancho=plancha_ancho,
-        plancha_alto=plancha_alto,
-        espesor=espesor,
-        margen=margen,
-        permitir_rotacion=permitir_rotacion,
-        piezas_pedidas=piezas,
-    )
+      pdf_bytes, acomodadas, pedidas, error_msg = generar_pdf_bytes(
+          numeracion=numeracion_real or "001",
+          nombre_orden=orden_final,
+          responsable=resp_final,
+          plancha_ancho=plancha_ancho,
+          plancha_alto=plancha_alto,
+          espesor=espesor,
+          margen=margen,
+          permitir_rotacion=permitir_rotacion,
+          piezas_pedidas=piezas,
+      )
 
     if error_msg:
       st.error(error_msg)
