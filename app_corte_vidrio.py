@@ -375,8 +375,8 @@ def generar_pdf_bytes(
           f"• Plancha Base     : {plancha_ancho:g} x {plancha_alto:g} {UNIDAD}"
           f" ({area_total_m2:.2f} m²)    |   Margen Refilado : {margen:g}"
           f" {UNIDAD}\n"
-          f"• Paños Cortados   : {len(plancha)} en esta hoja (Total orden:"
-          f" {total_piezas_acomodadas}/{total_piezas_pedidas} paños)    |  "
+          f"• Retazos Cortados   : {len(plancha)} en esta hoja (Total orden:"
+          f" {total_piezas_acomodadas}/{total_piezas_pedidas} retazos)    |  "
           f" Peso Neto Vidrio: {peso_cortes_kg:.1f} kg\n"
           f"• Aprovechamiento  : {aprovechamiento:.1f}% ({area_util_m2:.2f} m²)"
           f"         |   Sobrante / Retal: {desperdicio:.1f}%"
@@ -451,7 +451,7 @@ with st.form("form_corte"):
   st.caption("Formato: `ANCHOxALTOxCANTIDAD Nombre` — Ej: `55x84x4 Ventana`")
   cortes_texto = st.text_area(
       "Lista de piezas",
-      value="55x84x4 Paño A\n45x83x4 Paño B",
+      value="55x84x4 Retazo A\n45x83x4 Retazo B",
       height=120,
       label_visibility="collapsed",
   )
@@ -474,7 +474,7 @@ if enviar:
     try:
       bloques = linea_limpia.split(maxsplit=1)
       medidas = bloques[0].lower().replace(" ", "").split("x")
-      nombre = bloques[1].strip() if len(bloques) > 1 else f"Paño {idx}"
+      nombre = bloques[1].strip() if len(bloques) > 1 else f"Retazo {idx}"
       if len(medidas) != 3:
         raise ValueError
       w = float(medidas[0])
