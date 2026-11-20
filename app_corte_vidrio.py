@@ -11,8 +11,8 @@ import streamlit as st
 # ==========================================
 # 0. CONFIGURACIÓN DE EMPRESA Y RUTAS
 # ==========================================
-NOMBRE_EMPRESA = "VIDRIERÍA Y ALUMINIOS DEL PACÍFICO S.A."
-SUBTITULO_EMPRESA = "Departamento de Corte y Producción — Control de Calidad"
+NOMBRE_EMPRESA = "ALUMTECNIC ESTRUCTURAS EN ALUMINIO VIDRIO Y ACERO S.A.S."
+SUBTITULO_EMPRESA = "Corte y Producción — Control de Calidad"
 RUTA_LOGO = "logo.png"
 CARPETA_SALIDA_LOCAL = r"G:\Mi unidad\PYTHON PROJECTS\CUTTER\Generados"
 UNIDAD = "cm"
